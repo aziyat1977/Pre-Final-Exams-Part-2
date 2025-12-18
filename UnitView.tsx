@@ -5,6 +5,7 @@ import { Brain, Edit3, Move, Grid, Gamepad2, CheckCircle2, XCircle, ArrowRight }
 import { SnakeGame } from './components/SnakeGame';
 import { Crossword } from './components/Crossword';
 import { DragDrop } from './components/DragDrop';
+import { Timeline3D } from './components/Timeline3D';
 
 interface UnitViewProps {
   unit: Unit;
@@ -66,10 +67,9 @@ export const UnitView: React.FC<UnitViewProps> = ({ unit }) => {
               `}
               style={{
                 background: isActive ? `linear-gradient(135deg, var(--tw-gradient-from), var(--tw-gradient-to))` : undefined,
-                ['--tw-gradient-from' as any]: isActive ? '' : undefined // Tailwind handles class extraction, style ensures gradient application
+                ['--tw-gradient-from' as any]: isActive ? '' : undefined
               }}
             >
-              {/* Manual gradient application via style because tailwind classes in map usually need safelist or full strings */}
               {isActive && <div className={`absolute inset-0 rounded-2xl bg-gradient-to-br ${tab.color} opacity-100 -z-10`} />}
               
               <tab.icon size={20} className={isActive ? 'animate-bounce' : ''} />
@@ -92,6 +92,16 @@ export const UnitView: React.FC<UnitViewProps> = ({ unit }) => {
           {/* THEORY SECTION */}
           {activeTab === 'theory' && (
             <div className="space-y-8">
+              
+              {/* ULTRA ANIMATED TIMELINE */}
+              <motion.div
+                 initial={{ opacity: 0, scale: 0.95 }}
+                 animate={{ opacity: 1, scale: 1 }}
+                 transition={{ delay: 0.2 }}
+              >
+                  <Timeline3D unitId={unit.id} />
+              </motion.div>
+
               {/* Concepts */}
               <div className="grid md:grid-cols-3 gap-6">
                 {unit.theory.concepts.map((concept, idx) => (
