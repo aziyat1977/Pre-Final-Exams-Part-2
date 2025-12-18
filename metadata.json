@@ -1,5 +1,7 @@
 {
   "name": "WRIELTS - B1 Grammar Master",
   "description": "An ultra-animated, 3D-styled interactive exam platform for B1 English learners featuring gamified grammar exercises.",
-  "requestFramePermissions": []
+  "requestFramePermissions": [
+    "microphone"
+  ]
 }

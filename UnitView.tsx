@@ -1,81 +1,79 @@
-import React, { useState } from 'react';
+
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Unit } from './types';
-import { Brain, Edit3, Move, Grid, Gamepad2, CheckCircle2, XCircle, ArrowRight } from 'lucide-react';
+import { Brain, Edit3, Move, Grid, Gamepad2, CheckCircle2, Mic, BookOpen, ArrowRight, Zap } from 'lucide-react';
 import { SnakeGame } from './components/SnakeGame';
 import { Crossword } from './components/Crossword';
 import { DragDrop } from './components/DragDrop';
 import { Timeline3D } from './components/Timeline3D';
+import { SpeakingRecorder } from './components/SpeakingRecorder';
+import { ReadingSection } from './components/ReadingSection';
 
 interface UnitViewProps {
   unit: Unit;
 }
 
 export const UnitView: React.FC<UnitViewProps> = ({ unit }) => {
-  const [activeTab, setActiveTab] = useState<'theory' | 'quiz' | 'gap' | 'drag' | 'crossword' | 'game'>('theory');
+  // 11-Step Tabs
+  const steps = [
+    { id: 'leadin', label: 'Intro', icon: Zap },
+    { id: 'theory', label: 'Meaning', icon: Brain },
+    { id: 'check', label: 'Checks', icon: CheckCircle2 },
+    { id: 'practice', label: 'Practice', icon: Edit3 },
+    { id: 'gamified', label: 'Games', icon: Gamepad2 },
+    { id: 'reading', label: 'Reading', icon: BookOpen },
+    { id: 'speaking', label: 'Speaking', icon: Mic },
+  ];
+
+  const [activeTab, setActiveTab] = useState('leadin');
+  const [checkStep, setCheckStep] = useState(0); // For separate page quizzes
   const [quizAnswers, setQuizAnswers] = useState<Record<number, string>>({});
   const [gapAnswers, setGapAnswers] = useState<Record<number, string>>({});
+
+  // Reset internal states when unit changes
+  useEffect(() => {
+    setActiveTab('leadin');
+    setCheckStep(0);
+    setQuizAnswers({});
+    setGapAnswers({});
+  }, [unit.id]);
 
   const handleQuizSelect = (qId: number, optionId: string) => {
     setQuizAnswers(prev => ({ ...prev, [qId]: optionId }));
   };
 
-  const tabs = [
-    { id: 'theory', label: 'Theory', icon: Brain, color: 'from-blue-500 to-cyan-500' },
-    { id: 'quiz', label: 'Quiz', icon: CheckCircle2, color: 'from-green-500 to-emerald-500' },
-    { id: 'gap', label: 'Gap Fill', icon: Edit3, color: 'from-orange-500 to-amber-500' },
-    { id: 'drag', label: 'Sort', icon: Move, color: 'from-pink-500 to-rose-500' },
-    { id: 'crossword', label: 'Crossword', icon: Grid, color: 'from-purple-500 to-violet-500' },
-    { id: 'game', label: 'Snake', icon: Gamepad2, color: 'from-indigo-500 to-blue-600' },
-  ];
-
   return (
     <div className="pb-20">
+      
       {/* 3D Header */}
       <motion.div 
         className="mb-8 p-8 rounded-3xl glass-panel relative overflow-hidden group"
         whileHover={{ scale: 1.01 }}
       >
         <div className="absolute top-0 right-0 w-64 h-64 bg-brand-500/10 rounded-full blur-3xl -mr-16 -mt-16 transition-all group-hover:bg-brand-500/20" />
-        
-        <motion.h1 
-          initial={{ x: -20, opacity: 0 }}
-          animate={{ x: 0, opacity: 1 }}
-          className="text-4xl md:text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-white via-brand-200 to-brand-400 mb-4 drop-shadow-sm"
-        >
-          {unit.title.split(': ')[0]} <br/>
-          <span className="text-2xl md:text-4xl text-brand-300 font-bold">{unit.title.split(': ')[1]}</span>
-        </motion.h1>
-        <p className="text-lg text-gray-300 max-w-2xl leading-relaxed border-l-4 border-brand-500 pl-4">
-          {unit.description}
-        </p>
+        <h1 className="text-4xl md:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-white via-brand-200 to-brand-400 mb-2">
+          {unit.title.split(': ')[1]}
+        </h1>
+        <p className="text-gray-400 text-sm font-mono uppercase tracking-widest">{unit.description}</p>
       </motion.div>
 
-      {/* 3D Tabs Navigation */}
-      <div className="flex overflow-x-auto gap-3 pb-6 px-1 no-scrollbar perspective-container">
-        {tabs.map((tab) => {
-          const isActive = activeTab === tab.id;
+      {/* Navigation Stepper */}
+      <div className="flex overflow-x-auto gap-2 pb-6 px-1 no-scrollbar perspective-container">
+        {steps.map((step, idx) => {
+          const isActive = activeTab === step.id;
           return (
-            <motion.button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id as any)}
-              whileHover={{ y: -5, scale: 1.05 }}
-              whileTap={{ y: 0, scale: 0.95 }}
+            <button
+              key={step.id}
+              onClick={() => setActiveTab(step.id)}
               className={`
-                relative flex items-center gap-2 px-6 py-3 rounded-2xl font-bold whitespace-nowrap transition-all duration-300
-                ${isActive ? 'text-white shadow-[0_10px_20px_rgba(0,0,0,0.3)] ring-2 ring-white/20' : 'bg-white/5 text-gray-400 hover:bg-white/10'}
+                relative flex items-center gap-2 px-5 py-3 rounded-xl font-bold whitespace-nowrap transition-all duration-300
+                ${isActive ? 'bg-brand-500 text-white shadow-[0_0_20px_rgba(14,165,233,0.4)]' : 'bg-white/5 text-gray-500 hover:bg-white/10 hover:text-gray-300'}
               `}
-              style={{
-                background: isActive ? `linear-gradient(135deg, var(--tw-gradient-from), var(--tw-gradient-to))` : undefined,
-                ['--tw-gradient-from' as any]: isActive ? '' : undefined
-              }}
             >
-              {isActive && <div className={`absolute inset-0 rounded-2xl bg-gradient-to-br ${tab.color} opacity-100 -z-10`} />}
-              
-              <tab.icon size={20} className={isActive ? 'animate-bounce' : ''} />
-              <span>{tab.label}</span>
-              {isActive && <motion.div layoutId="tab-underline" className="absolute bottom-1 left-1/2 w-1 h-1 bg-white rounded-full -translate-x-1/2" />}
-            </motion.button>
+              <step.icon size={18} />
+              <span>{idx + 1}. {step.label}</span>
+            </button>
           );
         })}
       </div>
@@ -83,88 +81,69 @@ export const UnitView: React.FC<UnitViewProps> = ({ unit }) => {
       <AnimatePresence mode="wait">
         <motion.div
           key={activeTab}
-          initial={{ opacity: 0, y: 50, rotateX: -5 }}
-          animate={{ opacity: 1, y: 0, rotateX: 0 }}
-          exit={{ opacity: 0, y: -50, rotateX: 5 }}
-          transition={{ duration: 0.4, type: "spring" }}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -20 }}
+          transition={{ duration: 0.3 }}
           className="min-h-[500px]"
         >
-          {/* THEORY SECTION */}
-          {activeTab === 'theory' && (
-            <div className="space-y-8">
-              
-              {/* ULTRA ANIMATED TIMELINE */}
-              <motion.div
-                 initial={{ opacity: 0, scale: 0.95 }}
-                 animate={{ opacity: 1, scale: 1 }}
-                 transition={{ delay: 0.2 }}
-              >
-                  <Timeline3D unitId={unit.id} />
-              </motion.div>
+          {/* 1. LEAD IN */}
+          {activeTab === 'leadin' && (
+            <div className="flex flex-col items-center justify-center min-h-[400px] text-center max-w-2xl mx-auto">
+               <motion.div 
+                 initial={{ scale: 0 }} animate={{ scale: 1 }}
+                 className="w-24 h-24 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full flex items-center justify-center mb-6 shadow-[0_0_50px_rgba(250,204,21,0.5)]"
+               >
+                 <Zap size={48} className="text-white" />
+               </motion.div>
+               <h2 className="text-3xl font-black text-white mb-4">{unit.leadIn.title}</h2>
+               <div className="glass-panel p-6 rounded-2xl border border-white/10 mb-8 text-xl text-gray-200 italic">
+                 "{unit.leadIn.imageOrText}"
+               </div>
+               <p className="text-brand-300 font-bold text-lg mb-8">{unit.leadIn.question}</p>
+               <button onClick={() => setActiveTab('theory')} className="px-8 py-3 bg-brand-500 text-white rounded-full font-black flex items-center gap-2 hover:scale-105 transition-transform">
+                 START LESSON <ArrowRight />
+               </button>
+            </div>
+          )}
 
+          {/* 2. MEANING (THEORY) & VISUALS */}
+          {activeTab === 'theory' && (
+            <div className="space-y-12">
+              {/* Timeline/Cline */}
+              <Timeline3D unitId={unit.id} />
+              
               {/* Concepts */}
               <div className="grid md:grid-cols-3 gap-6">
-                {unit.theory.concepts.map((concept, idx) => (
-                  <motion.div 
-                    key={idx} 
-                    initial={{ opacity: 0, scale: 0.8 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ delay: idx * 0.1 }}
-                    whileHover={{ y: -10, rotateX: 5, rotateY: 5 }}
-                    className="glass-panel p-6 rounded-3xl border-t border-white/10 shadow-xl relative overflow-hidden"
-                  >
-                    <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 to-purple-500" />
-                    <div className="w-12 h-12 mb-4 rounded-2xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-2xl shadow-lg shadow-blue-500/30">
-                      🎨 
-                    </div>
-                    <h3 className="font-bold text-xl mb-2 text-white">{concept.title}</h3>
-                    <p className="text-gray-400 mb-4 text-sm leading-relaxed">{concept.text}</p>
-                    <div className="text-xs font-bold text-cyan-300 bg-cyan-500/10 px-3 py-2 rounded-lg border border-cyan-500/20 flex items-center gap-2">
-                       <span>👁️</span> {concept.visualDescription}
-                    </div>
-                  </motion.div>
-                ))}
-              </div>
-
-              {/* Formulas */}
-              <div className="grid gap-4">
-                 {unit.theory.formulas.map((formula, idx) => (
-                    <motion.div 
-                      key={idx}
-                      initial={{ x: -50, opacity: 0 }}
-                      animate={{ x: 0, opacity: 1 }}
-                      transition={{ delay: 0.3 + (idx * 0.1) }}
-                      className="glass-panel p-6 rounded-2xl border-l-8 border-l-brand-500 flex flex-col md:flex-row md:items-center justify-between gap-4 group hover:bg-white/5 transition-colors"
-                    >
-                       <div className="md:w-1/4">
-                          <h3 className="font-black text-brand-400 text-lg">{formula.type}</h3>
-                       </div>
-                       <div className="flex-1 grid grid-cols-1 md:grid-cols-3 gap-4 font-mono text-sm">
-                          <div className="bg-black/30 p-3 rounded-lg border border-white/5">
-                            <span className="text-gray-500 block text-xs mb-1">ENGLISH</span>
-                            <span className="text-green-400 font-bold">{formula.eng}</span>
-                          </div>
-                          <div className="bg-black/30 p-3 rounded-lg border border-white/5">
-                            <span className="text-gray-500 block text-xs mb-1">RUSSIAN</span>
-                            <span className="text-blue-300">{formula.rus}</span>
-                          </div>
-                          <div className="bg-black/30 p-3 rounded-lg border border-white/5">
-                            <span className="text-gray-500 block text-xs mb-1">UZBEK</span>
-                            <span className="text-purple-300">{formula.uzb}</span>
-                          </div>
-                       </div>
-                    </motion.div>
+                 {unit.meaning.concepts.map((c, i) => (
+                   <motion.div key={i} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }} className="glass-panel p-6 rounded-3xl border-t-4 border-t-brand-500">
+                      <div className="text-xs font-mono text-brand-400 mb-2 uppercase tracking-wider">Concept {i+1}</div>
+                      <h3 className="text-xl font-bold text-white mb-2">{c.title}</h3>
+                      <div className="text-xs bg-white/10 p-2 rounded mb-4 text-cyan-300">👁️ {c.visualDescription}</div>
+                      <div className="space-y-2 text-sm">
+                        <p className="text-gray-300">🇬🇧 {c.textEng}</p>
+                        <p className="text-blue-300">🇷🇺 {c.textRus}</p>
+                        <p className="text-purple-300">🇺🇿 {c.textUzb}</p>
+                      </div>
+                   </motion.div>
                  ))}
               </div>
 
-               {/* Examples */}
-               <div className="grid md:grid-cols-3 gap-4">
-                  {unit.theory.examples.map((ex, idx) => (
+              {/* Formulas */}
+              <div className="grid md:grid-cols-2 gap-4">
+                 {unit.meaning.formulas.map((f, i) => (
+                   <div key={i} className="bg-black/40 p-4 rounded-xl border border-white/10 flex justify-between items-center">
+                      <span className="text-gray-400 font-bold text-sm">{f.label}</span>
+                      <code className="text-green-400 font-mono bg-green-900/20 px-2 py-1 rounded">{f.formula}</code>
+                   </div>
+                 ))}
+              </div>
+
+              {/* Examples */}
+              <div className="grid md:grid-cols-3 gap-4">
+                  {unit.examples.map((ex, idx) => (
                     <motion.div 
                       key={idx}
-                      initial={{ y: 20, opacity: 0 }}
-                      animate={{ y: 0, opacity: 1 }}
-                      transition={{ delay: 0.6 + (idx * 0.1) }}
                       className="p-5 rounded-2xl bg-gradient-to-br from-purple-900/40 to-blue-900/40 border border-white/10"
                     >
                       <div className="text-xs font-bold text-purple-400 uppercase tracking-widest mb-2">{ex.type}</div>
@@ -175,116 +154,198 @@ export const UnitView: React.FC<UnitViewProps> = ({ unit }) => {
             </div>
           )}
 
-          {/* QUIZ SECTION */}
-          {activeTab === 'quiz' && (
-            <div className="max-w-3xl mx-auto space-y-6">
-              {unit.exercises.quiz.map((q, idx) => (
-                <motion.div 
-                  key={q.id}
-                  initial={{ x: 50, opacity: 0 }}
-                  animate={{ x: 0, opacity: 1 }}
-                  transition={{ delay: idx * 0.1 }}
-                  className="glass-panel p-8 rounded-3xl relative overflow-hidden"
-                >
-                  <div className="absolute top-0 right-0 p-4 opacity-10 font-black text-6xl text-white">#{q.id}</div>
-                  <h3 className="font-bold text-xl mb-6 text-white pr-8">{q.question}</h3>
-                  <div className="space-y-3">
-                    {q.options.map(opt => {
-                       const isSelected = quizAnswers[q.id] === opt.id;
-                       
-                       return (
-                         <motion.button 
-                          key={opt.id} 
-                          onClick={() => handleQuizSelect(q.id, opt.id)}
-                          whileHover={{ scale: 1.02 }}
-                          whileTap={{ scale: 0.98 }}
-                          className={`
-                            w-full p-4 rounded-xl text-left font-bold transition-all flex items-center justify-between border-2
-                            ${isSelected 
-                              ? (opt.isCorrect 
-                                ? 'bg-green-500/20 border-green-500 text-green-300 shadow-[0_0_15px_rgba(34,197,94,0.3)]' 
-                                : 'bg-red-500/20 border-red-500 text-red-300')
-                              : 'bg-black/20 border-transparent hover:bg-white/10 text-gray-300 hover:text-white'}
-                          `}
-                         >
-                           <div className="flex items-center gap-3">
-                             <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs border ${isSelected ? 'border-current' : 'border-gray-500'}`}>
-                               {opt.id.toUpperCase()}
-                             </div>
-                             {opt.text}
-                           </div>
-                           {isSelected && (
-                             <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }}>
-                               {opt.isCorrect ? <CheckCircle2 className="text-green-500" /> : <XCircle className="text-red-500" />}
-                             </motion.div>
-                           )}
-                         </motion.button>
-                       )
-                    })}
-                  </div>
-                </motion.div>
-              ))}
+          {/* 3. CONCEPT CHECKS (Separate Pages) */}
+          {activeTab === 'check' && (
+            <div className="max-w-xl mx-auto min-h-[400px] flex flex-col justify-center">
+               <div className="text-center mb-8">
+                 <span className="bg-brand-500/20 text-brand-400 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-widest">
+                   Concept Check {checkStep + 1} / {unit.conceptChecks.length}
+                 </span>
+               </div>
+               
+               <AnimatePresence mode="wait">
+                 <motion.div 
+                   key={checkStep}
+                   initial={{ x: 50, opacity: 0 }}
+                   animate={{ x: 0, opacity: 1 }}
+                   exit={{ x: -50, opacity: 0 }}
+                   className="glass-panel p-8 rounded-3xl"
+                 >
+                    <h3 className="text-xl font-bold text-white mb-6">{unit.conceptChecks[checkStep].question}</h3>
+                    <div className="space-y-3">
+                       {unit.conceptChecks[checkStep].options.map(opt => {
+                         const qId = unit.conceptChecks[checkStep].id;
+                         const isSelected = quizAnswers[qId] === opt.id;
+                         return (
+                           <button
+                             key={opt.id}
+                             onClick={() => handleQuizSelect(qId, opt.id)}
+                             className={`w-full p-4 rounded-xl text-left font-bold transition-all border-2 
+                                ${isSelected 
+                                  ? (opt.isCorrect ? 'border-green-500 bg-green-500/20 text-green-300' : 'border-red-500 bg-red-500/20 text-red-300') 
+                                  : 'border-white/10 bg-white/5 hover:bg-white/10'}`}
+                           >
+                              {opt.text}
+                           </button>
+                         )
+                       })}
+                    </div>
+                 </motion.div>
+               </AnimatePresence>
+
+               <div className="flex justify-between mt-8">
+                  <button 
+                    disabled={checkStep === 0}
+                    onClick={() => setCheckStep(prev => prev - 1)}
+                    className="text-gray-500 disabled:opacity-30 hover:text-white font-bold"
+                  >
+                    Previous
+                  </button>
+                  <button 
+                    onClick={() => {
+                        if (checkStep < unit.conceptChecks.length - 1) setCheckStep(prev => prev + 1);
+                        else setActiveTab('practice');
+                    }}
+                    className="bg-white text-black px-6 py-2 rounded-full font-bold hover:scale-105 transition-transform"
+                  >
+                    {checkStep < unit.conceptChecks.length - 1 ? 'Next Question' : 'Go to Practice'}
+                  </button>
+               </div>
             </div>
           )}
 
-          {/* GAP FILL */}
-          {activeTab === 'gap' && (
-             <div className="max-w-3xl mx-auto space-y-6">
-               {unit.exercises.gapFill.map((item, idx) => (
-                 <motion.div 
-                    key={item.id}
-                    initial={{ y: 20, opacity: 0 }}
-                    animate={{ y: 0, opacity: 1 }}
-                    transition={{ delay: idx * 0.1 }}
-                    className="glass-panel p-8 rounded-3xl border border-white/10 flex flex-col items-center text-center md:text-left md:flex-row md:justify-center gap-4 text-xl"
-                 >
-                    <div className="leading-relaxed text-gray-200">
-                      <span>{item.sentenceBefore}</span>
-                      <span className="relative inline-block mx-2">
-                        <input 
-                          type="text" 
-                          placeholder={item.hint}
-                          className={`
-                            px-4 py-2 rounded-lg border-2 outline-none font-bold w-48 text-center bg-black/30 transition-all
-                            ${gapAnswers[item.id]?.toLowerCase().trim() === item.correctAnswer.toLowerCase() 
-                              ? 'border-green-500 text-green-400 shadow-[0_0_10px_rgba(74,222,128,0.3)]' 
-                              : 'border-white/20 focus:border-brand-500 text-white focus:bg-black/50'}
-                          `}
-                          onChange={(e) => setGapAnswers(prev => ({ ...prev, [item.id]: e.target.value }))}
-                        />
-                        {gapAnswers[item.id]?.toLowerCase().trim() === item.correctAnswer.toLowerCase() && (
-                          <motion.div 
-                            initial={{ scale: 0 }} animate={{ scale: 1 }}
-                            className="absolute -top-3 -right-3 bg-green-500 text-black rounded-full p-1"
-                          >
-                            <CheckCircle2 size={12} />
-                          </motion.div>
-                        )}
-                      </span>
-                      <span>{item.sentenceAfter}</span>
-                    </div>
-                 </motion.div>
-               ))}
+          {/* 4. EXERCISES & PRACTICE */}
+          {activeTab === 'practice' && (
+             <div className="space-y-12">
+                
+                {/* 3 Standard Tests */}
+                <section>
+                   <h3 className="text-xl font-black text-white mb-6 flex items-center gap-2"><Edit3 className="text-blue-400" /> STANDARD TESTS</h3>
+                   <div className="grid md:grid-cols-3 gap-6">
+                      {unit.exercises.tests.map(q => (
+                         <div key={q.id} className="glass-panel p-6 rounded-2xl">
+                            <p className="font-bold mb-4 h-12">{q.question}</p>
+                            <div className="space-y-2">
+                               {q.options.map(opt => (
+                                  <button key={opt.id} onClick={() => handleQuizSelect(q.id + 100, opt.id)} className={`w-full text-left text-sm p-2 rounded-lg border ${quizAnswers[q.id + 100] === opt.id ? (opt.isCorrect ? 'border-green-500 bg-green-500/10' : 'border-red-500 bg-red-500/10') : 'border-white/10 hover:bg-white/5'}`}>
+                                     {opt.text}
+                                  </button>
+                               ))}
+                            </div>
+                         </div>
+                      ))}
+                   </div>
+                </section>
+
+                {/* 3 Quizzes */}
+                <section>
+                   <h3 className="text-xl font-black text-white mb-6 flex items-center gap-2"><CheckCircle2 className="text-purple-400" /> SKILL QUIZZES</h3>
+                   <div className="space-y-4">
+                      {unit.exercises.quizzes.map(q => (
+                         <div key={q.id} className="bg-white/5 p-4 rounded-xl flex flex-col md:flex-row md:items-center justify-between gap-4">
+                            <span className="font-medium text-gray-200">{q.question}</span>
+                            <div className="flex gap-2">
+                               {q.options.map(opt => (
+                                  <button key={opt.id} onClick={() => handleQuizSelect(q.id + 200, opt.id)} className={`px-4 py-2 rounded-lg text-sm font-bold border transition-colors ${quizAnswers[q.id + 200] === opt.id ? (opt.isCorrect ? 'bg-green-500 text-black border-green-500' : 'bg-red-500 text-white border-red-500') : 'border-white/20 hover:bg-white/10'}`}>
+                                     {opt.text}
+                                  </button>
+                               ))}
+                            </div>
+                         </div>
+                      ))}
+                   </div>
+                </section>
+
+                {/* 3 Gap Fills */}
+                <section>
+                   <h3 className="text-xl font-black text-white mb-6 flex items-center gap-2"><Move className="text-orange-400" /> GAP FILL</h3>
+                   <div className="space-y-3">
+                      {unit.exercises.gapFill.map(g => (
+                         <div key={g.id} className="glass-panel p-4 rounded-xl flex flex-wrap items-center gap-2 text-lg">
+                            <span>{g.sentenceBefore}</span>
+                            <input 
+                              placeholder={g.hint} 
+                              className={`bg-black/30 border-b-2 outline-none px-2 py-1 text-center w-40 font-bold transition-colors ${gapAnswers[g.id]?.toLowerCase() === g.correctAnswer.toLowerCase() ? 'border-green-500 text-green-400' : 'border-gray-500 text-white'}`}
+                              onChange={(e) => setGapAnswers(prev => ({...prev, [g.id]: e.target.value}))}
+                            />
+                            <span>{g.sentenceAfter}</span>
+                         </div>
+                      ))}
+                   </div>
+                </section>
              </div>
           )}
 
-          {/* DRAG DROP */}
-          {activeTab === 'drag' && (
-            <DragDrop 
-              bucketALabel={unit.exercises.dragDrop.bucketA}
-              bucketBLabel={unit.exercises.dragDrop.bucketB}
-              items={unit.exercises.dragDrop.items}
-            />
+          {/* 5. GAMIFIED (Kahoot + Extras) */}
+          {activeTab === 'gamified' && (
+             <div className="space-y-12">
+                {/* Kahoot Style */}
+                <section>
+                    <div className="bg-purple-900/40 p-8 rounded-3xl border border-purple-500/30">
+                       <h3 className="text-2xl font-black text-white mb-6 italic tracking-widest flex items-center gap-2">
+                          <Zap className="text-yellow-400 fill-current animate-pulse" /> SPEED ROUND
+                       </h3>
+                       <div className="grid gap-4">
+                          {unit.exercises.kahoot.map(q => (
+                             <div key={q.id} className="flex flex-col md:flex-row gap-4 items-center bg-black/40 p-4 rounded-xl">
+                                <div className="flex-1 font-black text-xl text-center md:text-left">{q.question}</div>
+                                <div className="grid grid-cols-2 gap-2 w-full md:w-auto">
+                                   {q.options.map((opt, i) => (
+                                      <button 
+                                        key={opt.id} 
+                                        onClick={() => handleQuizSelect(q.id + 300, opt.id)}
+                                        className={`
+                                           px-8 py-4 rounded-lg font-black text-white shadow-lg transform transition-transform active:scale-95
+                                           ${i === 0 ? 'bg-red-500' : 'bg-blue-500'}
+                                           ${quizAnswers[q.id + 300] === opt.id ? (opt.isCorrect ? 'ring-4 ring-white' : 'opacity-50') : ''}
+                                        `}
+                                      >
+                                         {opt.text}
+                                      </button>
+                                   ))}
+                                </div>
+                             </div>
+                          ))}
+                       </div>
+                    </div>
+                </section>
+
+                {/* Snake */}
+                {unit.exercises.snake && <SnakeGame levels={unit.exercises.snake} />}
+
+                {/* Crossword */}
+                {unit.exercises.crossword && <Crossword data={unit.exercises.crossword} />}
+                
+                {/* Drag Drop */}
+                {unit.exercises.dragDrop && (
+                   <DragDrop 
+                     bucketALabel={unit.exercises.dragDrop.bucketA}
+                     bucketBLabel={unit.exercises.dragDrop.bucketB}
+                     items={unit.exercises.dragDrop.items}
+                   />
+                )}
+             </div>
           )}
 
-          {/* CROSSWORD */}
-          {activeTab === 'crossword' && (
-             <Crossword data={unit.exercises.crossword} />
+          {/* 6. READING */}
+          {activeTab === 'reading' && (
+             <ReadingSection data={unit.reading} />
           )}
 
-          {/* SNAKE GAME */}
-          {activeTab === 'game' && (
-            <SnakeGame levels={unit.exercises.snake} />
+          {/* 7. SPEAKING */}
+          {activeTab === 'speaking' && (
+             <div className="grid md:grid-cols-3 gap-6">
+                {unit.speaking.map((prompt, i) => (
+                   <div key={prompt.id} className="glass-panel p-6 rounded-3xl border border-white/10 flex flex-col">
+                      <div className="bg-white/10 w-8 h-8 rounded-full flex items-center justify-center font-bold mb-4">{i + 1}</div>
+                      <h3 className="text-xl font-bold text-brand-300 mb-2">{prompt.topic}</h3>
+                      <p className="text-white text-lg mb-6 flex-1">{prompt.question}</p>
+                      <div className="mt-auto">
+                        <SpeakingRecorder questionId={prompt.id} />
+                      </div>
+                   </div>
+                ))}
+             </div>
           )}
 
         </motion.div>
