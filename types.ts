@@ -1,3 +1,4 @@
+
 export type AnswerState = 'idle' | 'correct' | 'incorrect';
 
 export interface QuizQuestion {
@@ -51,6 +52,7 @@ export interface TheorySection {
 
 export interface Unit {
   id: string;
+  level: 'B1' | 'B1+'; // Oxford Navigate Level
   title: string;
   description: string;
   theory: TheorySection;

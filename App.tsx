@@ -1,5 +1,6 @@
+
 import React, { useState } from 'react';
-import { Menu, Moon, Sun, X, GraduationCap, ChevronRight, Sparkles } from 'lucide-react';
+import { Menu, Moon, Sun, X, GraduationCap, ChevronRight, Sparkles, BookOpen } from 'lucide-react';
 import { UNITS } from './data';
 import { UnitView } from './UnitView';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -7,8 +8,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 export default function App() {
   const [activeUnitId, setActiveUnitId] = useState<string>(UNITS[0].id);
   const [isSidebarOpen, setSidebarOpen] = useState(false);
-  
-  // Theme state - defaulting to dark for the "Ultra" look, but toggleable
   const [isDark, setIsDark] = useState(true);
 
   const toggleTheme = () => {
@@ -25,6 +24,46 @@ export default function App() {
   };
 
   const activeUnit = UNITS.find(u => u.id === activeUnitId) || UNITS[0];
+
+  // Group units by level
+  const unitsB1 = UNITS.filter(u => u.level === 'B1');
+  const unitsB1Plus = UNITS.filter(u => u.level === 'B1+');
+
+  const UnitList = ({ units, title, colorClass }: { units: typeof UNITS, title: string, colorClass: string }) => (
+    <div className="mb-6">
+      <h3 className={`text-xs font-black uppercase tracking-widest mb-3 px-4 ${colorClass} opacity-80 flex items-center gap-2`}>
+        <BookOpen size={12} /> {title}
+      </h3>
+      <div className="space-y-2">
+        {units.map((unit) => (
+          <motion.button
+            key={unit.id}
+            onClick={() => { setActiveUnitId(unit.id); setSidebarOpen(false); }}
+            whileHover={{ scale: 1.02, x: 5 }}
+            whileTap={{ scale: 0.98 }}
+            className={`
+              w-full text-left p-3 mx-2 rounded-xl transition-all relative overflow-hidden group max-w-[90%]
+              ${activeUnitId === unit.id 
+                ? 'bg-gradient-to-r from-brand-600 to-purple-600 text-white shadow-lg shadow-brand-500/25' 
+                : 'hover:bg-white/5 text-gray-400 hover:text-white'}
+            `}
+          >
+             {/* Active Glow */}
+             {activeUnitId === unit.id && (
+               <div className="absolute inset-0 bg-white/20 blur-lg" />
+             )}
+             
+             <div className="relative z-10 flex flex-col">
+               <span className={`text-[9px] font-black tracking-widest uppercase mb-1 ${activeUnitId === unit.id ? 'text-white/80' : 'text-gray-600'}`}>
+                 {unit.id.split('-').pop()}
+               </span>
+               <div className="font-bold leading-tight text-sm">{unit.title.split(': ')[1]}</div>
+             </div>
+          </motion.button>
+        ))}
+      </div>
+    </div>
+  );
 
   return (
     <div className={`min-h-screen relative overflow-hidden transition-colors duration-700 ${isDark ? 'dark' : ''}`}>
@@ -56,7 +95,7 @@ export default function App() {
               WRIELTS
             </span>
             <span className="hidden sm:inline-block text-xs font-bold px-2 py-1 rounded-full bg-white/10 border border-white/10 text-brand-300">
-              B1 MASTER
+              NAVIGATE
             </span>
           </div>
         </div>
@@ -85,36 +124,10 @@ export default function App() {
                 COURSE UNITS
               </h2>
             </div>
-            <div className="flex-1 overflow-y-auto p-4 space-y-3 perspective-container">
-              {UNITS.map((unit, idx) => (
-                <motion.button
-                  key={unit.id}
-                  onClick={() => setActiveUnitId(unit.id)}
-                  whileHover={{ scale: 1.02, x: 5, rotateY: 5 }}
-                  whileTap={{ scale: 0.98 }}
-                  className={`
-                    w-full text-left p-4 rounded-xl transition-all relative overflow-hidden group
-                    ${activeUnitId === unit.id 
-                      ? 'bg-gradient-to-r from-brand-600 to-purple-600 text-white shadow-lg shadow-brand-500/25' 
-                      : 'hover:bg-white/5 text-gray-400 hover:text-white'}
-                  `}
-                >
-                   {/* Active Glow */}
-                   {activeUnitId === unit.id && (
-                     <div className="absolute inset-0 bg-white/20 blur-lg" />
-                   )}
-                   
-                   <div className="relative z-10">
-                     <div className="flex justify-between items-center mb-1">
-                        <span className={`text-[10px] font-black tracking-widest uppercase ${activeUnitId === unit.id ? 'text-white/80' : 'text-gray-500'}`}>
-                          Unit {unit.id}
-                        </span>
-                        {activeUnitId === unit.id && <motion.div layoutId="activeDot" className="w-2 h-2 bg-white rounded-full shadow-[0_0_10px_white]" />}
-                     </div>
-                     <div className="font-bold leading-tight">{unit.title.split(': ')[1]}</div>
-                   </div>
-                </motion.button>
-              ))}
+            <div className="flex-1 overflow-y-auto p-2 perspective-container custom-scrollbar">
+              <UnitList units={unitsB1} title="PRE-INTERMEDIATE (B1)" colorClass="text-brand-400" />
+              <div className="h-px bg-white/10 mx-4 mb-6" />
+              <UnitList units={unitsB1Plus} title="INTERMEDIATE (B1+)" colorClass="text-purple-400" />
             </div>
           </div>
         </motion.div>
@@ -139,19 +152,9 @@ export default function App() {
                   <h2 className="text-2xl font-black bg-clip-text text-transparent bg-gradient-to-r from-brand-400 to-purple-400">UNITS</h2>
                   <button onClick={() => setSidebarOpen(false)} className="p-2 bg-white/10 rounded-full"><X /></button>
                 </div>
-                <div className="flex-1 overflow-y-auto space-y-3">
-                  {UNITS.map(unit => (
-                    <button
-                      key={unit.id}
-                      onClick={() => { setActiveUnitId(unit.id); setSidebarOpen(false); }}
-                      className={`w-full p-4 rounded-xl border-l-4 text-left transition-all ${
-                        activeUnitId === unit.id ? 'bg-brand-500/20 border-brand-500 text-white' : 'border-transparent text-gray-400'
-                      }`}
-                    >
-                      <div className="text-xs font-bold opacity-60">Unit {unit.id}</div>
-                      <div className="font-bold">{unit.title.split(': ')[1]}</div>
-                    </button>
-                  ))}
+                <div className="flex-1 overflow-y-auto space-y-2">
+                  <UnitList units={unitsB1} title="PRE-INTERMEDIATE" colorClass="text-brand-400" />
+                  <UnitList units={unitsB1Plus} title="INTERMEDIATE" colorClass="text-purple-400" />
                 </div>
               </motion.div>
             </>
